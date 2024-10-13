@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enchant Client</title>
+    <style>
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e1e1e1;
+            color: #333;
+            display: flex;
+            height: 100vh;
+            border-radius: 20px;
+            overflow: hidden; /* Prevents overflow from the dots */
+            position: relative; /* Allows absolute positioning of footer */
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 20%;
+            background-color: #fff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            border-radius: 20px;
+        }
+
+        /* Pink bar at the top left */
+        .sidebar .header {
+            background-color: #ef2df8;
+            padding: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            border-radius: 20px 0 0 0;
+        }
+
+        .header h1 {
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            font-size: 1.5em;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 60px 0 0 0;
+            flex-grow: 1; /* Allow ul to grow and take available space */
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #e1e1e1;
+            color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar ul li:hover {
+            background-color: #cfcfcf;
+        }
+
+        .sidebar ul li.active {
+            background-color: #ef2df8;
+            color: #fff;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: auto; /* Push footer to bottom */
+        }
+
+        /* Main content area */
+        .main-content {
+            flex-grow: 1;
+            background-color: #f2f2f2;
+            padding: 40px;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+        }
+
+        .main-content.active {
+            display: flex; /* Show the active content */
+        }
+
+        .main-content h2 {
+            margin: 0;
+            font-size: 2em;
+            color: #333;
+        }
+
+        .version-box {
+            background-color: #dcdcdc;
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Game and fun buttons styling */
+        .game-btn, .fun-btn, .dark-mode-btn {
+            background-color: #e1e1e1;
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background-color 0.3s, transform 0.3s;
+            margin-top: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-btn.clicked, .fun-btn.clicked, .dark-mode-btn.clicked {
+            background-color: #ef2df8;
+            color: #fff;
+        }
+
+        .game-btn:hover, .fun-btn:hover, .dark-mode-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Header buttons (Minimize, Maximize, Close) */
+        .header-buttons {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .header-buttons .btn {
+            background-color: #ff00ff;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+        }
+
+        .header-buttons .btn:hover {
+            background-color: #d600d6;
+        }
+
+        /* Pink dot styling */
+        .click-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(239, 45, 248, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: scale(0); /* Start invisible */
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            opacity: 0; /* Start invisible */
+        }
+
+        /* Dark mode styles */
+        .dark-mode {
+            background-color: #2e2e2e;
+            color: #f0f0f0;
+        }
+
+        .dark-mode .sidebar {
+            background-color: #3e3e3e;
+        }
+
+        .dark-mode .version-box {
+            background-color: #444;
+            color: #ddd;
+        }
+
+        .dark-mode .sidebar ul li {
+            background-color: #4e4e4e;
+            color: #f0f0f0;
+        }
+
+        .dark-mode .sidebar ul li:hover {
+            background-color: #5e5e5e;
+        }
+
+        .dark-mode .sidebar ul li.active {
+            background-color: #ef2df8;
+            color: #fff;
+        }
+
+        .dark-mode .main-content {
+            background-color: #3e3e3e;
+        }
+
+        .dark-mode .main-content h2 {
+            color: #f0f0f0;
+        }
+
+        .dark-mode .main-content .version-box {
+            background-color: #444;
+            color: #ddd;
+        }
+
+        /* Footer Buttons */
+        .footer-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: absolute;
+            bottom: 20px; /* Align to the bottom */
+            left: 20px; /* Align to the left */
+            gap: 10px; /* Space between buttons */
+        }
+
+        .footer-buttons .footer-btn {
+            background-color: #e1e1e1;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .footer-buttons .footer-btn:hover {
+            background-color: #cfcfcf;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Pink bar at the top left -->
+        <div class="header">
+            <h1>Enchant Client</h1>
+        </div>
+        
+        <!-- Navigation -->
+        <ul>
+            <li class="active" onclick="openTab('games')"><i class="icon">🎮</i> Games</li>
+            <li onclick="openTab('exploits')"><i class="icon">🛠️</i> Exploits</li>
+            <li onclick="openTab('fun')"><i class="icon">🎉</i> Fun</li>
+        </ul>
+        
+        <div class="footer">
+            <p>Client v0.8.0 (UI 2.0)</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <!-- Games Tab Content -->
+    <div id="games" class="main-content active">
+        <h2>Games</h2>
+        <button class="game-btn" onclick="toggleButton(this); openOnlyUp()">Open Only Up</button>
+        <button class="game-btn" onclick="toggleButton(this); openSurvive2D()">Open Survive2D</button>
+    </div>
+
+    <!-- Exploits Tab Content -->
+    <div id="exploits" class="main-content">
+        <h2>Exploits</h2>
+        <div class="version-box">Exploits coming soon!</div>
+    </div>
+
+    <!-- Fun Tab Content -->
+    <div id="fun" class="main-content">
+        <h2>Fun</h2>
+        <button class="fun-btn" onclick="activateCoolClick()">Activate Cool Click</button>
+        <button class="fun-btn" onclick="floodHistory()">Flood History</button>
+        <button class="dark-mode-btn" onclick="toggleDarkMode()">Dark Mode</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-buttons">
+        <button class="footer-btn" onclick="openTab('games')">Client</button>
+        <button class="footer-btn" onclick="openTab('credits')">Credits</button>
+    </div>
+
+    <!-- Credits Tab Content -->
+    <div id="credits" class="main-content">
+        <h2>Credits</h2>
+        <div class="version-box">Made by uf0</div>
+    </div>
+
+    <script>
+        // Toggle the active tab
+        function openTab(tabName) {
+            var i, tabcontent, tablinks;
+
+            // Hide all tab content
+            tabcontent = document.getElementsByClassName("main-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+
+            // Remove the 'active' class from all links
+            tablinks = document.querySelectorAll(".sidebar ul li");
+            tablinks.forEach(link => link.classList.remove("active"));
+
+            // Show the current tab, and add an 'active' class to the link that opened it
+            document.getElementById(tabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // Toggle button effect
+        function toggleButton(button) {
+            button.classList.toggle("clicked");
+        }
+
+        // Open Only Up Game
+        function openOnlyUp() {
+            var win = window.open();
+            var url = "https://subscribetotryhxrdbacon-opensocial.googleusercontent.com/gadgets/ifr?url=https://cdn.jsdelivr.net/gh/wergboy/Meteor@7e77300e074d9eb77fa119d640baa1fe1a318bfb/examples/react-in-blaze/lib/oup.xml&container=ig";
+            var iframe = win.document.createElement('iframe');
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "none";
+            iframe.src = url;
+            win.document.body.appendChild(iframe);
+        }
+
+        // Open Survive2D Game
+        function openSurvive2D() {
+            var win = window.open();
+            var url = "https://survive2d.netlify.app/";
+            var iframe = win.document.createElement('iframe');
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "none";
+            iframe.src = url;
+            win.document.body.appendChild(iframe);
+        }
+
+        // Cool Click effect
+        function activateCoolClick() {
+            document.addEventListener('click', createClickDot);
+        }
+
+        // Create a pink dot effect on click
+        function createClickDot(event) {
+            var clickDot = document.createElement("div");
+            clickDot.classList.add("click-dot");
+            document.body.appendChild(clickDot);
+            clickDot.style.left = `${event.pageX}px`;
+            clickDot.style.top = `${event.pageY}px`;
+
+            // Trigger the animation
+            setTimeout(() => {
+                clickDot.style.transform = "scale(4)"; // Grow the dot
+                clickDot.style.opacity = "1"; // Full opacity
+            }, 10);
+
+            // Remove the dot after the animation
+            setTimeout(() => {
+                clickDot.style.opacity = "0"; // Start fading out
+            }, 200); // Time before fading out
+
+            setTimeout(() => {
+                clickDot.remove(); // Remove the dot from the DOM
+            }, 400); // Total time for the dot to disappear
+        }
+
+        // History flood function
+        function floodHistory() {
+            var num = prompt("History flood amount:");
+            if (num && !isNaN(num)) {
+                var x = window.location.href;
+
+                for (var i = 1; i <= num; i++) {
+                    history.pushState(0, 0, i == num ? x : i.toString());
+                }
+                alert("History flood successful! " + window.location.href + " now appears in your history " + num + (num == 1 ? " time." : " times."));
+            } else {
+                alert("Please enter a valid number.");
+            }
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+            var button = document.querySelector(".dark-mode-btn");
+            button.textContent = document.body.classList.contains("dark-mode") ? "Light Mode" : "Dark Mode";
+        }
+    </script>
+</body>
+</html>
